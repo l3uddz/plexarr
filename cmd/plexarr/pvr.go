@@ -40,7 +40,7 @@ func getPvr(name string, cfg config, libraries []plexLibraryItem) (plexarr.Pvr, 
 
 		// validate all libraries are series
 		for _, lib := range libraries {
-			if lib.Type != plexarr.MovieLibrary {
+			if lib.Type != plexarr.TvLibrary {
 				return nil, errors.New("sonarr only supports tv libraries")
 			}
 		}
