@@ -1,7 +1,6 @@
 package radarr
 
 import (
-	"errors"
 	"github.com/l3uddz/plexarr"
 	"github.com/rs/zerolog"
 )
@@ -23,11 +22,7 @@ type Client struct {
 	rewrite plexarr.Rewriter
 }
 
-func New(c Config, libraryType plexarr.LibraryType) (*Client, error) {
-	if libraryType != plexarr.MovieLibrary {
-		return nil, errors.New("only movie libraries are supported")
-	}
-
+func New(c Config) (*Client, error) {
 	rewriter, err := plexarr.NewRewriter(c.Rewrite)
 	if err != nil {
 		return nil, err

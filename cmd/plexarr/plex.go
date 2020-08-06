@@ -16,6 +16,7 @@ type plexLibraryItem struct {
 
 func getPlexLibraryItems(p *plex.Client, libraries []string) ([]plexLibraryItem, error) {
 	plexItems := make([]plexLibraryItem, 0)
+	totalItems := 0
 
 	for _, library := range libraries {
 		// get library items
@@ -24,8 +25,6 @@ func getPlexLibraryItems(p *plex.Client, libraries []string) ([]plexLibraryItem,
 			Str("pvr", cli.PVR).
 			Bool("dry_run", cli.DryRun).
 			Logger()
-
-		l.Debug().Msg("Retrieving plex library items...")
 
 		items, libType, err := p.GetLibraryItems(library)
 		if err != nil {
@@ -36,8 +35,11 @@ func getPlexLibraryItems(p *plex.Client, libraries []string) ([]plexLibraryItem,
 			return nil, fmt.Errorf("no plex library items found for: %v", library)
 		}
 
-		l.Info().
-			Int("count", len(items)).
+		count := len(items)
+		totalItems += count
+
+		l.Debug().
+			Int("count", count).
 			Msg("Retrieved plex library items")
 
 		plexItems = append(plexItems, plexLibraryItem{
@@ -46,6 +48,11 @@ func getPlexLibraryItems(p *plex.Client, libraries []string) ([]plexLibraryItem,
 			Items: items,
 		})
 	}
+
+	log.Info().
+		Int("count", totalItems).
+		Strs("libraries", libraries).
+		Msg("Retrieved plex library items")
 
 	return plexItems, nil
 }

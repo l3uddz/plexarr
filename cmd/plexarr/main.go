@@ -39,8 +39,8 @@ var (
 		globals
 
 		// flags
-		PVR     string   `required:"1" type:"string" env:"PLEXARR_PVR" help:"PVR to match from"`
-		Library []string `required:"1" type:"string" env:"PLEXARR_LIBRARY" help:"Plex Library to match against"`
+		PVR     string   `required:"1" type:"string" help:"PVR to match from"`
+		Library []string `required:"1" type:"string" help:"Plex Library to match against"`
 
 		Config    string `type:"path" default:"${config_file}" env:"PLEXARR_CONFIG" help:"Config file path"`
 		Log       string `type:"path" default:"${log_file}" env:"PLEXARR_LOG" help:"Log file path"`
@@ -197,7 +197,7 @@ func main() {
 	}
 
 	// retrieve items from pvr
-	pvr, err := getPvr(cli.PVR, cfg, plexItems[0].Type)
+	pvr, err := getPvr(cli.PVR, cfg, plexItems)
 	if err != nil {
 		log.Fatal().
 			Err(err).
