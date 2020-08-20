@@ -6,6 +6,7 @@ import (
 	"github.com/l3uddz/plexarr"
 	"net/url"
 	"path/filepath"
+	"strings"
 
 	// database driver
 	_ "github.com/mattn/go-sqlite3"
@@ -73,19 +74,20 @@ func (d *datastore) GetMediaItems(libraryId int) ([]MediaItem, error) {
 	mediaItems := make([]MediaItem, 0)
 	for rows.Next() {
 		m := new(struct {
-			LibraryId                             *uint64
-			LibraryName                           *string
-			SectionId                             *uint64
-			SectionPath                           *string
-			SectionDirectoryId                    *uint64
-			SectionChildDirectoryId               *uint64
-			SectionChildDirectoryPath             *string
-			SectionChildDirectoryMetadataItemId   *uint64
-			SectionChildDirectoryMetadataItemGuid *string
+			LibraryId                                      *uint64
+			LibraryName                                    *string
+			SectionId                                      *uint64
+			SectionPath                                    *string
+			SectionDirectoryId                             *uint64
+			SectionChildDirectoryId                        *uint64
+			SectionChildDirectoryPath                      *string
+			SectionChildDirectoryMetadataItemId            *uint64
+			SectionChildDirectoryMetadataItemGuid          *string
+			SectionChildDirectoryMetadataItemExternalGuids *string
 		})
 		if err := rows.Scan(&m.LibraryId, &m.LibraryName, &m.SectionId, &m.SectionPath, &m.SectionDirectoryId,
 			&m.SectionChildDirectoryId, &m.SectionChildDirectoryPath, &m.SectionChildDirectoryMetadataItemId,
-			&m.SectionChildDirectoryMetadataItemGuid); err != nil {
+			&m.SectionChildDirectoryMetadataItemGuid, &m.SectionChildDirectoryMetadataItemExternalGuids); err != nil {
 			return nil, fmt.Errorf("scan media item row: %v", err)
 		}
 
@@ -94,15 +96,57 @@ func (d *datastore) GetMediaItems(libraryId int) ([]MediaItem, error) {
 			return nil, fmt.Errorf("invalid media item row: %v", m)
 		}
 
+		definitiveGUID := *m.SectionChildDirectoryMetadataItemGuid
+		switch {
+		case strings.HasPrefix(definitiveGUID, "plex://"):
+			// item has a plex guid - we are only able to handle this in specific scenarios
+			if m.SectionChildDirectoryMetadataItemExternalGuids == nil {
+				// no external guids were present ??
+				return nil, fmt.Errorf("invalid media item row: %v", m)
+			}
+
+			preferredGUID, err := getPreferredExternalGuid(*m.SectionChildDirectoryMetadataItemExternalGuids)
+			if err != nil {
+				return nil, err
+			}
+
+			definitiveGUID = preferredGUID
+		}
+
 		mediaItems = append(mediaItems, MediaItem{
 			LibraryId:  *m.LibraryId,
 			Path:       filepath.Join(*m.SectionPath, *m.SectionChildDirectoryPath),
 			MetadataId: *m.SectionChildDirectoryMetadataItemId,
-			GUID:       *m.SectionChildDirectoryMetadataItemGuid,
+			GUID:       definitiveGUID,
 		})
 	}
 
 	return mediaItems, nil
+}
+
+func getPreferredExternalGuid(externalGuids string) (string, error) {
+	guids := strings.Split(externalGuids, ",")
+	preferredGuid := ""
+
+	for _, guid := range guids {
+		// tvdb has priority always
+		if strings.HasPrefix(guid, "tvdb://") {
+			return fmt.Sprintf("com.plexapp.agents.the%s", guid), nil
+		}
+
+		switch {
+		case strings.HasPrefix(guid, "imdb://"):
+			preferredGuid = fmt.Sprintf("com.plexapp.agents.%s", guid)
+		case strings.HasPrefix(guid, "tmdb://") && preferredGuid == "":
+			preferredGuid = fmt.Sprintf("com.plexapp.agents.%s", guid)
+		}
+	}
+
+	if preferredGuid == "" {
+		return "", fmt.Errorf("unable to determine preferred external guids: %v", externalGuids)
+	}
+
+	return preferredGuid, nil
 }
 
 //goland:noinspection ALL
@@ -148,6 +192,7 @@ SELECT DISTINCT
         WHEN mti.guid IS NOT NULL THEN mti.guid
         ELSE NULL
     END AS child_directory_metadata_item_guid
+    , GROUP_CONCAT(t.tag) as child_directory_metadata_item_guids_external
 FROM
     ls
     JOIN directories d ON d.parent_directory_id = ls.section_directory_id
@@ -157,7 +202,10 @@ FROM
     JOIN metadata_items mti ON mti.id = mdi.metadata_item_id
     LEFT JOIN metadata_items mti2 ON mti2.id = mti.parent_id
     LEFT JOIN metadata_items mti3 ON mti3.id = mti2.parent_id
+	LEFT JOIN taggings tj ON tj.metadata_item_id = mti.id
+    LEFT JOIN tags t ON t.id = tj.tag_id AND t.tag_type = 314
 WHERE
    ls.library_id = $1
+GROUP BY d.id
 `
 )
