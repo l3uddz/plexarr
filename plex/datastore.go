@@ -134,11 +134,11 @@ func getPreferredExternalGuid(externalGuids string) (string, error) {
 			return fmt.Sprintf("com.plexapp.agents.the%s", guid), nil
 		}
 
-		if strings.HasPrefix(guid, "imdb://tt") {
+		if strings.HasPrefix(guid, "tmdb://") {
 			return fmt.Sprintf("com.plexapp.agents.%s", guid), nil
 		}
 
-		if strings.HasPrefix(guid, "tmdb://") {
+		if strings.HasPrefix(guid, "imdb://tt") {
 			preferredGuid = fmt.Sprintf("com.plexapp.agents.%s", guid)
 		}
 
