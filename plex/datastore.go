@@ -134,19 +134,20 @@ func getPreferredExternalGuid(externalGuids string) (string, error) {
 			return fmt.Sprintf("com.plexapp.agents.the%s", guid), nil
 		}
 
-		switch {
-		case strings.HasPrefix(guid, "imdb://tt"):
-			preferredGuid = fmt.Sprintf("com.plexapp.agents.%s", guid)
-		case strings.HasPrefix(guid, "tmdb://") && preferredGuid == "":
-			preferredGuid = fmt.Sprintf("com.plexapp.agents.%s", guid)
+		if strings.HasPrefix(guid, "imdb://tt") {
+			return fmt.Sprintf("com.plexapp.agents.%s", guid), nil
 		}
+
+		if strings.HasPrefix(guid, "tmdb://") {
+			return fmt.Sprintf("com.plexapp.agents.%s", guid), nil
+		}
+
 	}
 
 	if preferredGuid == "" {
 		return "", fmt.Errorf("unable to determine preferred external guids: %v", externalGuids)
 	}
 
-	return preferredGuid, nil
 }
 
 //goland:noinspection ALL
