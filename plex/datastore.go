@@ -135,7 +135,7 @@ func getPreferredExternalGuid(externalGuids string) (string, error) {
 		}
 
 		switch {
-		case strings.HasPrefix(guid, "imdb://"):
+		case strings.HasPrefix(guid, "imdb://tt"):
 			preferredGuid = fmt.Sprintf("com.plexapp.agents.%s", guid)
 		case strings.HasPrefix(guid, "tmdb://") && preferredGuid == "":
 			preferredGuid = fmt.Sprintf("com.plexapp.agents.%s", guid)
