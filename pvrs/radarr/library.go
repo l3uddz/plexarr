@@ -65,6 +65,7 @@ func (c *Client) GetLibraryItems() (map[string]plexarr.PvrItem, error) {
 
 		if item.TmdbId != nil && *item.TmdbId != 0 {
 			guids = append(guids, fmt.Sprintf("com.plexapp.agents.themoviedb://%d", *item.TmdbId))
+			guids = append(guids, fmt.Sprintf("com.plexapp.agents.tmdb://%d", *item.TmdbId))
 		}
 
 		if len(guids) == 0 {
