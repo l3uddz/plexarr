@@ -96,57 +96,28 @@ func (d *datastore) GetMediaItems(libraryId int) ([]MediaItem, error) {
 			return nil, fmt.Errorf("invalid media item row: %v", m)
 		}
 
-		definitiveGUID := *m.SectionChildDirectoryMetadataItemGuid
-		switch {
-		case strings.HasPrefix(definitiveGUID, "plex://"):
+		guid := ""
+		if strings.HasPrefix(*m.SectionChildDirectoryMetadataItemGuid, "plex://") {
 			// item has a plex guid - we are only able to handle this in specific scenarios
 			if m.SectionChildDirectoryMetadataItemExternalGuids == nil {
 				// no external guids were present ??
 				return nil, fmt.Errorf("invalid media item row: %v", m)
 			}
 
-			preferredGUID, err := getPreferredExternalGuid(*m.SectionChildDirectoryMetadataItemExternalGuids)
-			if err != nil {
-				return nil, err
-			}
-
-			definitiveGUID = preferredGUID
+			guid = *m.SectionChildDirectoryMetadataItemExternalGuids
+		} else {
+			guid = *m.SectionChildDirectoryMetadataItemGuid
 		}
 
 		mediaItems = append(mediaItems, MediaItem{
 			LibraryId:  *m.LibraryId,
 			Path:       filepath.Join(*m.SectionPath, *m.SectionChildDirectoryPath),
 			MetadataId: *m.SectionChildDirectoryMetadataItemId,
-			GUID:       definitiveGUID,
+			GUID:       guid,
 		})
 	}
 
 	return mediaItems, nil
-}
-
-func getPreferredExternalGuid(externalGuids string) (string, error) {
-	guids := strings.Split(externalGuids, ",")
-	preferredGuid := ""
-
-	for _, guid := range guids {
-		// tvdb has priority always
-		if strings.HasPrefix(guid, "tvdb://") {
-			return fmt.Sprintf("com.plexapp.agents.the%s", guid), nil
-		}
-
-		switch {
-		case strings.HasPrefix(guid, "imdb://"):
-			preferredGuid = fmt.Sprintf("com.plexapp.agents.%s", guid)
-		case strings.HasPrefix(guid, "tmdb://") && preferredGuid == "":
-			preferredGuid = fmt.Sprintf("com.plexapp.agents.%s", guid)
-		}
-	}
-
-	if preferredGuid == "" {
-		return "", fmt.Errorf("unable to determine preferred external guids: %v", externalGuids)
-	}
-
-	return preferredGuid, nil
 }
 
 //goland:noinspection ALL
