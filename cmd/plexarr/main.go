@@ -14,7 +14,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -243,15 +242,15 @@ func main() {
 			}
 
 			// validate match against pvr item
-			validMatch := false
-			for _, guid := range pvrItem.GUID {
-				if strings.HasPrefix(plexItem.GUID, guid) {
-					validMatch = true
-					break
-				}
+			plexGuids, err := getPlexGuids(plexItem.GUID)
+			if err != nil {
+				log.Fatal().
+					Err(err).
+					Interface("plex_item", plexItem).
+					Msg("Failed preparing plex guids for comparison")
 			}
 
-			if validMatch {
+			if guidsMatched(plexGuids, pvrItem.GUID) {
 				l.Trace().
 					Interface("plex_item", plexItem).
 					Interface("pvr_item", pvrItem).
