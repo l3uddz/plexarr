@@ -77,7 +77,7 @@ func getPvrItems(names []string, cfg config, plexItems []plexLibraryItem) (map[s
 			return nil, fmt.Errorf("retrieve pvr library items: %v: no items found", pvrName)
 		}
 
-		itemsRemoved := 0
+		itemsSkipped := 0
 		itemsAdded := 0
 
 		pl := log.With().
@@ -93,7 +93,7 @@ func getPvrItems(names []string, cfg config, plexItems []plexLibraryItem) (map[s
 					Interface("item", item).
 					Msg("Path is not unique to this pvr, skipping item(s)")
 
-				itemsRemoved++
+				itemsSkipped++
 				delete(pvrItems, key)
 				continue
 			}
@@ -103,9 +103,9 @@ func getPvrItems(names []string, cfg config, plexItems []plexLibraryItem) (map[s
 		}
 
 		pl.Info().
-			Int("removed", itemsRemoved).
+			Int("skipped", itemsSkipped).
 			Int("added", itemsAdded).
-			Msg("Processed pvr library items")
+			Msg("Retrieved pvr library items")
 	}
 
 	return pvrItems, nil
