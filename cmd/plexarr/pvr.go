@@ -84,9 +84,6 @@ func getPvrItems(names []string, cfg config, plexItems []plexLibraryItem) (map[s
 			Str("pvr", pvrName).
 			Logger()
 
-		pl.Debug().
-			Msg("Retrieved pvr library items")
-
 		// process pvr items
 		for key, item := range items {
 			// does key already exist in pvrItems (have we seen this path before?)
