@@ -22,7 +22,7 @@ func getPlexLibraryItems(p *plex.Client, libraries []string) ([]plexLibraryItem,
 		// get library items
 		l := log.With().
 			Str("library", library).
-			Str("pvr", cli.PVR).
+			Strs("pvrs", cli.PVR).
 			Bool("dry_run", cli.DryRun).
 			Logger()
 
@@ -84,7 +84,7 @@ func findDuplicateItems(items []plex.MediaItem) ([]plex.MediaItem, error) {
 func splitDuplicates(p *plex.Client, library plexLibraryItem) (int, error) {
 	l := log.With().
 		Str("library", library.Name).
-		Str("pvr", cli.PVR).
+		Strs("pvrs", cli.PVR).
 		Bool("dry_run", cli.DryRun).
 		Logger()
 
