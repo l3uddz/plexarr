@@ -51,16 +51,7 @@ var (
 
 type globals struct {
 	Version versionFlag `name:"version" help:"Print version information and quit"`
-}
-
-type versionFlag string
-
-func (v versionFlag) Decode(ctx *kong.DecodeContext) error { return nil }
-func (v versionFlag) IsBool() bool                         { return true }
-func (v versionFlag) BeforeApply(app *kong.Kong, vars kong.Vars) error {
-	fmt.Println(vars["version"])
-	app.Exit(0)
-	return nil
+	Update  updateFlag  `name:"update" help:"Update if newer version is available and quit"`
 }
 
 func main() {
