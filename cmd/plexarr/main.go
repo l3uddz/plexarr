@@ -38,7 +38,7 @@ var (
 		globals
 
 		// flags
-		PVR     string   `required:"1" type:"string" help:"PVR to match from"`
+		PVR     []string `required:"1" type:"string" help:"PVR to match from"`
 		Library []string `required:"1" type:"string" help:"Plex Library to match against"`
 
 		Config    string `type:"path" default:"${config_file}" env:"PLEXARR_CONFIG" help:"Config file path"`
@@ -151,7 +151,7 @@ func main() {
 
 	// get library items
 	l := log.With().
-		Str("pvr", cli.PVR).
+		Strs("pvrs", cli.PVR).
 		Bool("dry_run", cli.DryRun).
 		Logger()
 
@@ -196,14 +196,7 @@ func main() {
 	}
 
 	// retrieve items from pvr
-	pvr, err := getPvr(cli.PVR, cfg, plexItems)
-	if err != nil {
-		log.Fatal().
-			Err(err).
-			Msg("Failed initialising pvr")
-	}
-
-	pvrItems, err := pvr.GetLibraryItems()
+	pvrItems, err := getPvrItems(cli.PVR, cfg, plexItems)
 	if err != nil {
 		log.Fatal().
 			Err(err).
@@ -214,9 +207,11 @@ func main() {
 		l.Fatal().Msg("No pvr library items retrieved?")
 	}
 
-	l.Info().
-		Int("count", len(pvrItems)).
-		Msg("Retrieved pvr library items")
+	if len(cli.PVR) > 1 {
+		l.Info().
+			Int("count", len(pvrItems)).
+			Msg("Retrieved all pvr library items")
+	}
 
 	// track items not matched (display debug log)
 	plexItemsNotFound := make([]plex.MediaItem, 0)
