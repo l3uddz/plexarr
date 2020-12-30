@@ -16,7 +16,7 @@ func (c *Client) GetLibraryItems(libraryName string) ([]MediaItem, plexarr.Libra
 	// get library items
 	items, err := c.store.GetMediaItems(lib.ID)
 	if err != nil {
-		return nil, 0, fmt.Errorf("retrieve library items: %v", items)
+		return nil, 0, fmt.Errorf("retrieve library items: %v", err)
 	}
 
 	return items, lib.Type, nil

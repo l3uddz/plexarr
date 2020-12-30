@@ -15,6 +15,7 @@ import (
 func newDatastore(path string) (*datastore, error) {
 	q := url.Values{}
 	q.Set("mode", "ro")
+	q.Set("_busy_timeout", "5000")
 
 	db, err := sql.Open("sqlite3", plexarr.DSN(path, q))
 	if err != nil {
@@ -93,18 +94,17 @@ func (d *datastore) GetMediaItems(libraryId int) ([]MediaItem, error) {
 
 		if m.LibraryId == nil || m.SectionPath == nil || m.SectionChildDirectoryPath == nil ||
 			m.SectionChildDirectoryMetadataItemId == nil || m.SectionChildDirectoryMetadataItemGuid == nil {
-			return nil, fmt.Errorf("invalid media item row: %v", m)
+			return nil, fmt.Errorf("invalid media item row: %+v", m)
 		}
 
 		guid := ""
 		if strings.HasPrefix(*m.SectionChildDirectoryMetadataItemGuid, "plex://") {
 			// item has a plex guid - we are only able to handle this in specific scenarios
 			if m.SectionChildDirectoryMetadataItemExternalGuids == nil {
-				// no external guids were present ??
-				return nil, fmt.Errorf("invalid media item row: %v", m)
+				guid = fmt.Sprintf("local://%v", *m.SectionChildDirectoryMetadataItemId)
+			} else {
+				guid = *m.SectionChildDirectoryMetadataItemExternalGuids
 			}
-
-			guid = *m.SectionChildDirectoryMetadataItemExternalGuids
 		} else {
 			guid = *m.SectionChildDirectoryMetadataItemGuid
 		}
