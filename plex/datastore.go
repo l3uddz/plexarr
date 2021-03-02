@@ -163,7 +163,7 @@ SELECT DISTINCT
         WHEN mti.guid IS NOT NULL THEN mti.guid
         ELSE NULL
     END AS child_directory_metadata_item_guid
-    , GROUP_CONCAT(t.tag) as child_directory_metadata_item_guids_external
+    , GROUP_CONCAT(DISTINCT t.tag) as child_directory_metadata_item_guids_external
 FROM
     ls
     JOIN directories d ON d.parent_directory_id = ls.section_directory_id
@@ -173,7 +173,7 @@ FROM
     JOIN metadata_items mti ON mti.id = mdi.metadata_item_id
     LEFT JOIN metadata_items mti2 ON mti2.id = mti.parent_id
     LEFT JOIN metadata_items mti3 ON mti3.id = mti2.parent_id
-	LEFT JOIN taggings tj ON tj.metadata_item_id = mti.id
+	LEFT JOIN taggings tj ON tj.metadata_item_id = (CASE WHEN mti3.guid IS NOT NULL THEN mti3.id WHEN mti2.guid IS NOT NULL THEN mti2.id ELSE mti.id END)
     LEFT JOIN tags t ON t.id = tj.tag_id AND t.tag_type = 314
 WHERE
    ls.library_id = $1
