@@ -19,7 +19,7 @@ type movieItem struct {
 
 func (c *Client) GetLibraryItems() (map[string]plexarr.PvrItem, error) {
 	// create request
-	req, err := http.NewRequest("GET", plexarr.JoinURL(c.url, "api", "movie"), nil)
+	req, err := http.NewRequest("GET", plexarr.JoinURL(c.url, "api", "v3", "movie"), nil)
 	if err != nil {
 		return nil, fmt.Errorf("%v: %w", err, plexarr.ErrFatal)
 	}

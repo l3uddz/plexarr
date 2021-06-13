@@ -11,13 +11,15 @@ type seriesItem struct {
 	Title      string  `json:"title"`
 	Path       string  `json:"path"`
 	TvdbId     *uint64 `json:"tvdbId"`
-	SizeOnDisk uint64  `json:"sizeOnDisk"`
-	Status     string  `json:"status"`
+	Statistics struct {
+		SizeOnDisk uint64 `json:"sizeOnDisk"`
+	} `json:"statistics"`
+	Status string `json:"status"`
 }
 
 func (c *Client) GetLibraryItems() (map[string]plexarr.PvrItem, error) {
 	// create request
-	req, err := http.NewRequest("GET", plexarr.JoinURL(c.url, "api", "series"), nil)
+	req, err := http.NewRequest("GET", plexarr.JoinURL(c.url, "api", "v3", "series"), nil)
 	if err != nil {
 		return nil, fmt.Errorf("%v: %w", err, plexarr.ErrFatal)
 	}
@@ -50,7 +52,7 @@ func (c *Client) GetLibraryItems() (map[string]plexarr.PvrItem, error) {
 	pvrItems := make(map[string]plexarr.PvrItem)
 	for _, item := range sonarrItems {
 		// skip item if we do not have a file or its marked as deleted
-		if item.SizeOnDisk == 0 || item.Status == "deleted" {
+		if item.Statistics.SizeOnDisk == 0 || item.Status == "deleted" {
 			continue
 		}
 
